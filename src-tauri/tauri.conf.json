@@ -15,8 +15,6 @@
         "title": "led-contrller",
         "width": 700,
         "height": 700,
-        "resizable": false,   
-        "maximizable": false, 
         "decorations": false,
         "shadow": true,
         "backgroundColor": "#0f0f1a",
