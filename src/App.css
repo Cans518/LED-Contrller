@@ -1,0 +1,104 @@
+@import "tailwindcss"; 
+
+@theme {
+  /* 自定义字体 */
+  --font-sans: "Microsoft YaHei UI", "Segoe UI", sans-serif;
+
+  /* 自定义颜色 (复刻之前的配置) */
+  --color-bgStart: #0f0f1a;
+  --color-bgMid: #1a1a2e;
+  --color-bgEnd: #16213e;
+  --color-panel: rgba(35, 35, 55, 0.8);
+  --color-accentStart: #667eea;
+  --color-accentEnd: #764ba2;
+  --color-dangerStart: #f5576c;
+  --color-dangerEnd: #f093fb;
+  --color-successStart: #11998e;
+  --color-successEnd: #38ef7d;
+  --color-textMain: #e8e8e8;
+  --color-textSub: #a8a8b8;
+}
+
+html, body {
+  background: transparent;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* 防止滚动条出现 */
+  
+  /* 字体和禁止选中保持不变 */
+  font-family: var(--font-sans);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 2. 把圆角和背景色加给 React 的根节点 */
+#root {
+  /* 👇 这里的背景色就是你窗口的实际颜色 */
+  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+  color: #e8e8e8;
+  
+  /* 👇 真正的窗口尺寸和圆角 */
+  width: 100vw;
+  height: 100vh;
+  /* border-radius: 12px; 这里控制圆角大小 */
+  overflow: hidden;    /* 关键：把直角的内容切掉 */
+  
+  /* 加上边框防止和黑色壁纸融为一体 */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-sizing: border-box;
+}
+
+/* --- 修复滑动条的核心代码 --- */
+input[type=range] {
+  -webkit-appearance: none;
+  background: transparent;
+  
+  /* 👇 关键修复 1: 显式允许在这个元素上进行交互，防止 body 的禁止选中干扰 */
+  -webkit-user-select: auto;
+  user-select: auto;
+  
+  /* 👇 关键修复 2: 告诉 Tauri 这个区域绝对不能用来拖动窗口 */
+  -webkit-app-region: no-drag;
+  
+  cursor: grab; /* 鼠标放上去显示抓手 */
+  position: relative; 
+  z-index: 20; /* 提高层级，防止被卡片背景遮挡 */
+  touch-action: none; 
+}
+
+/* 按下时鼠标变紧抓手 */
+input[type=range]:active {
+  cursor: grabbing;
+}
+
+/* 滑块头部 (那个圆点) */
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 18px; /* 加大一点，更容易拖动 */
+  width: 18px;
+  border-radius: 50%;
+  background: linear-gradient(to bottom, #667eea, #764ba2);
+  cursor: grab;
+  margin-top: -7px; /* 垂直居中修正 */
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.6);
+  border: 2px solid rgba(255,255,255,0.8); /* 加粗白边，视觉更明显 */
+  transition: transform 0.1s;
+}
+
+/* 按住滑块时的动效 */
+input[type=range]:active::-webkit-slider-thumb {
+  transform: scale(1.2); /* 按住时变大 */
+  cursor: grabbing;
+  background: #fff; /* 按住变白，反馈更强 */
+}
+
+/* 滑动轨道 */
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: rgba(80, 80, 100, 0.5);
+  border-radius: 2px;
+}

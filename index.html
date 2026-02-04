@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LED Commander</title>
+    <style>
+      /* 1. 基础背景设置 (防白屏) */
+    html, body {
+        background: transparent !important; 
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        font-family: "Microsoft YaHei UI", sans-serif;
+      }
+
+      /* 2. 加载动画容器 (绝对居中) */
+      .loader-container {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        /* border-radius: 24px; 👈 让加载画面也是圆角的 */
+        overflow: hidden;    /* 👈 裁剪掉溢出的内容 */
+        background: radial-gradient(circle at center, #1a1a2e 0%, #0f0f1a 100%);
+      }
+
+      /* 3. 霓虹光环动画 */
+      .loader-ring {
+        width: 60px;
+        height: 60px;
+        border: 4px solid rgba(102, 126, 234, 0.2); /* 淡淡的底色 */
+        border-top: 4px solid #667eea; /* 亮色 (accentStart) */
+        border-right: 4px solid #764ba2; /* 渐变色 (accentEnd) */
+        border-radius: 50%;
+        animation: spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite; /* 更有弹性的旋转 */
+        box-shadow: 0 0 20px rgba(102, 126, 234, 0.4); /* 霓虹发光效果 */
+      }
+
+      /* 4. 加载文字 */
+      .loader-text {
+        margin-top: 20px;
+        color: #a8a8b8;
+        font-size: 14px;
+        letter-spacing: 2px;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+
+      /* 5. 动画关键帧 */
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 1; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div class="loader-container">
+        <div class="loader-ring"></div>
+        <div class="loader-text">INITIALIZING</div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
