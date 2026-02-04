@@ -64,36 +64,44 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 20
+          
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
+          
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
-      - name: Install Tauri CLI
-        run: npm install -g @tauri-apps/cli
+          
       - name: Install frontend dependencies
         run: npm install
-      - name: Build Android APK
+        
+      - name: Build Android APK (Debug)
+        # ⚠️ 关键修改：
+        # 1. 加入 --debug (解决解析包错误)
+        # 2. 加入 --target universal (生成通用包)
         run: |
           npm run tauri android init
-          npm run tauri android build -- --apk
+          npm run tauri android build --debug -- --apk --target universal
       
       # 只有在推 Tag 时，才把 APK 上传到 Release
       - name: Upload APK to Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: src-tauri/gen/android/app/build/outputs/apk/universal/release/*.apk
+          # ⚠️ 关键修改：路径改为 universal/debug
+          files: src-tauri/gen/android/app/build/outputs/apk/universal/debug/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -102,4 +110,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: src-tauri/gen/android/app/build/outputs/apk/universal/release/*.apk
+          # ⚠️ 关键修改：路径改为 universal/debug
+          path: src-tauri/gen/android/app/build/outputs/apk/universal/debug/*.apk
