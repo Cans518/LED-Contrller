@@ -19,16 +19,16 @@ interface ConfigState {
 // 1. 滑块组件 (使用 memo 避免不必要的重渲染)
 const Slider = memo(({ value, min, max, onChange }: { value: number, min: number, max: number, onChange: (val: number) => void }) => {
   return (
-    <input 
-      type="range" 
-      min={min} 
-      max={max} 
-      value={value} 
+    <input
+      type="range"
+      min={min}
+      max={max}
+      value={value}
       // 这里的 onChange 直接传回数值，避免父组件再转换
       onChange={(e) => onChange(Number(e.target.value))}
       // 阻止冒泡，防止无边框窗口的拖动逻辑干扰
       onPointerDown={(e) => e.stopPropagation()}
-      className="flex-1 h-5 w-full cursor-pointer" 
+      className="flex-1 h-5 w-full cursor-pointer"
     />
   );
 });
@@ -42,7 +42,7 @@ const ControlRow = ({ label, children }: { label: string, children: React.ReactN
 );
 
 // 3. 分组框
-const GroupBox = ({ title, icon: Icon, children, className="" }: any) => (
+const GroupBox = ({ title, icon: Icon, children, className = "" }: any) => (
   <div className={`bg-panel border border-slate-700/50 rounded-3xl p-4 flex flex-col gap-3 shadow-lg backdrop-blur-sm ${className}`}>
     <div className="flex items-center gap-2 mb-1 shrink-0">
       <div className="bg-gradient-to-r from-accentStart to-accentEnd p-1.5 rounded-md text-white shadow-md">
@@ -61,7 +61,7 @@ function App() {
   // --- 状态管理 ---
   const [ip, setIp] = useState("192.168.1.117");
   const [status, setStatus] = useState("就绪");
-  
+
   const [config, setConfig] = useState<ConfigState>({
     total_leds: 60, active_len: 60, effect: 0, bright: 128,
     breath_en: true, breath_freq: 15, dir: 1, flow_speed: 30,
@@ -92,7 +92,7 @@ function App() {
       } finally {
         isSending.current = false;
       }
-    }, 100); 
+    }, 100);
 
     return () => clearInterval(interval);
   }, [ip]);
@@ -114,15 +114,15 @@ function App() {
 
   return (
     <div className="h-screen flex flex-col p-4 gap-4 font-sans text-xs select-none overflow-hidden">
-      
+
       {/* Header */}
-      <div 
-        data-tauri-drag-region 
+      <div
+        data-tauri-drag-region
         className="bg-panel rounded-xl p-3 flex items-center gap-4 shadow-md border border-slate-700/30 shrink-0 select-none"
       >
-        <div 
+        <div
           className="flex items-center gap-2 bg-[#141423] border border-slate-600/50 rounded-lg px-3 py-1.5"
-          onPointerDown={(e) => e.stopPropagation()} 
+          onPointerDown={(e) => e.stopPropagation()}
         >
           <span className="text-textSub font-bold">IP</span>
           <input value={ip} onChange={(e) => setIp(e.target.value)}
@@ -145,23 +145,23 @@ function App() {
         </div>
 
         <div className="flex gap-2 pl-4 border-l border-white/10 ml-2" onPointerDown={(e) => e.stopPropagation()}>
-          <button onClick={() => getCurrentWindow().minimize()} 
+          <button onClick={() => getCurrentWindow().minimize()}
             className="p-1.5 hover:bg-white/10 rounded-md text-gray-400 hover:text-white transition-colors">
             <Minus size={16} />
           </button>
-          <button onClick={() => getCurrentWindow().close()} 
+          <button onClick={() => getCurrentWindow().close()}
             className="p-1.5 hover:bg-red-500/80 rounded-md text-gray-400 hover:text-white transition-colors">
             <X size={16} />
           </button>
         </div>
       </div>
 
-      {/* 主内容 */}
-      <div className="grid grid-cols-2 gap-4 flex-1 min-h-0">
-        
-        {/* 左列 */}
-        <div className="flex flex-col gap-4 h-full">
-          <GroupBox title="全局设置" icon={Sun} className="flex-1">
+      {/* 主内容 - 添加 overflow-y-auto 允许移动端滚动 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0 overflow-y-auto pb-4">
+
+        {/* 左列 - 移动端高度自适应，桌面端撑满 */}
+        <div className="flex flex-col gap-4 h-auto md:h-full">
+          <GroupBox title="全局设置" icon={Sun} className="flex-1 min-h-[200px]">
             <ControlRow label="总数">
               <input type="number" value={config.total_leds} onChange={(e) => updateConfig('total_leds', Number(e.target.value))}
                 onPointerDown={(e) => e.stopPropagation()}
@@ -184,19 +184,19 @@ function App() {
             </div>
           </GroupBox>
 
-          <GroupBox title="特效模式" icon={Wind} className="flex-1">
+          <GroupBox title="特效模式" icon={Wind} className="flex-1 min-h-[180px]">
             <select value={config.effect} onChange={(e) => updateConfig('effect', Number(e.target.value))}
               onPointerDown={(e) => e.stopPropagation()}
               className="bg-[#141423] text-white border border-slate-600/50 rounded px-3 py-2 outline-none w-full mb-2 cursor-pointer hover:border-accentStart transition-colors">
               {["🌈 彩虹 (Rainbow)", "☄️ 流星 (Comet)", "💡 静态 (Static)", "✨ 闪烁 (Blink)", "🎭 跑马灯 (Marquee)"].map((n, i) => <option key={i} value={i}>{n}</option>)}
             </select>
             <div className="flex gap-3 mb-2 bg-[#141423]/50 p-1.5 rounded-lg border border-slate-700/30">
-               {[1, -1].map(d => (
-                 <label key={d} className={`flex-1 flex items-center justify-center gap-2 cursor-pointer py-1.5 rounded-md transition-all ${config.dir === d ? 'bg-accentStart text-white shadow-md' : 'text-textSub hover:bg-white/5'}`} onPointerDown={(e) => e.stopPropagation()}>
-                    <input type="radio" name="dir" checked={config.dir === d} onChange={() => updateConfig('dir', d)} className="hidden"/>
-                    {d === 1 ? <>正向 <ArrowRight size={12}/></> : <><ArrowLeft size={12}/> 反向</>}
-                 </label>
-               ))}
+              {[1, -1].map(d => (
+                <label key={d} className={`flex-1 flex items-center justify-center gap-2 cursor-pointer py-1.5 rounded-md transition-all ${config.dir === d ? 'bg-accentStart text-white shadow-md' : 'text-textSub hover:bg-white/5'}`} onPointerDown={(e) => e.stopPropagation()}>
+                  <input type="radio" name="dir" checked={config.dir === d} onChange={() => updateConfig('dir', d)} className="hidden" />
+                  {d === 1 ? <>正向 <ArrowRight size={12} /></> : <><ArrowLeft size={12} /> 反向</>}
+                </label>
+              ))}
             </div>
             <ControlRow label="速度">
               <Slider min={0} max={100} value={config.flow_speed} onChange={(v) => updateConfig('flow_speed', v)} />
@@ -205,19 +205,19 @@ function App() {
         </div>
 
         {/* 右列 */}
-        <div className="flex flex-col gap-4 h-full">
-          <GroupBox title="颜色调节" icon={Palette} className="flex-[1.2]"> 
+        <div className="flex flex-col gap-4 h-auto md:h-full">
+          <GroupBox title="颜色调节" icon={Palette} className="flex-[1.2] min-h-[200px]">
             {['r', 'g', 'b'].map((c) => (
               <ControlRow key={c} label={c.toUpperCase()}>
-                <span className={`w-2.5 h-2.5 rounded-full mr-1 shadow-sm ${c==='r'?'bg-red-500':c==='g'?'bg-green-500':'bg-blue-500'}`}></span>
+                <span className={`w-2.5 h-2.5 rounded-full mr-1 shadow-sm ${c === 'r' ? 'bg-red-500' : c === 'g' ? 'bg-green-500' : 'bg-blue-500'}`}></span>
                 <Slider min={0} max={255} value={(config as any)[`solid_${c}`]} onChange={(v) => updateConfig(`solid_${c}` as any, v)} />
               </ControlRow>
             ))}
-            <div className="h-8 rounded-lg border border-white/10 mt-2 shadow-inner transition-colors duration-300" 
-                 style={{ backgroundColor: `rgb(${config.solid_r}, ${config.solid_g}, ${config.solid_b})`, boxShadow: `0 0 20px rgb(${config.solid_r}, ${config.solid_g}, ${config.solid_b}, 0.2)` }} />
+            <div className="h-8 rounded-lg border border-white/10 mt-2 shadow-inner transition-colors duration-300"
+              style={{ backgroundColor: `rgb(${config.solid_r}, ${config.solid_g}, ${config.solid_b})`, boxShadow: `0 0 20px rgb(${config.solid_r}, ${config.solid_g}, ${config.solid_b}, 0.2)` }} />
           </GroupBox>
 
-          <GroupBox title="流星参数" icon={Activity} className="flex-1">
+          <GroupBox title="流星参数" icon={Activity} className="flex-1 min-h-[120px]">
             <ControlRow label="尾长">
               <Slider min={1} max={30} value={config.comet_len} onChange={(v) => updateConfig('comet_len', v)} />
               <span className="w-6 text-center text-white bg-[#141423] rounded py-0.5">{config.comet_len}</span>
@@ -230,28 +230,28 @@ function App() {
             </div>
           </GroupBox>
 
-          <GroupBox title="单点控制" icon={Hash} className="flex-1">
-             <div className="flex gap-3 items-center h-full">
-               <input type="number" value={pixelId} onChange={(e) => setPixelId(Number(e.target.value))} 
-                 onPointerDown={(e) => e.stopPropagation()}
-                 className="bg-[#141423] border border-slate-600/50 rounded w-16 text-center text-white py-2 outline-none focus:border-accentStart" placeholder="ID" />
-               <div className="flex-1 flex gap-2">
-                  <button onClick={() => sendCmdImmediate({ cmd: "pixel", idx: pixelId, r: config.solid_r, g: config.solid_g, b: config.solid_b })} 
-                    onPointerDown={(e) => e.stopPropagation()}
-                    className="flex-1 bg-gradient-to-r from-accentStart to-accentEnd rounded-lg text-white text-xs font-bold hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-accentStart/20">
-                    设置当前色
-                  </button>
-                  <button onClick={() => sendCmdImmediate({ cmd: "pixel", idx: pixelId, r: 0, g: 0, b: 0 })} 
-                    onPointerDown={(e) => e.stopPropagation()}
-                    className="w-14 bg-slate-700 hover:bg-slate-600 rounded-lg text-white text-xs font-bold active:scale-95 transition-all">
-                    关
-                  </button>
-               </div>
-             </div>
+          <GroupBox title="单点控制" icon={Hash} className="flex-1 min-h-[100px]">
+            <div className="flex gap-3 items-center h-full">
+              <input type="number" value={pixelId} onChange={(e) => setPixelId(Number(e.target.value))}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="bg-[#141423] border border-slate-600/50 rounded w-16 text-center text-white py-2 outline-none focus:border-accentStart" placeholder="ID" />
+              <div className="flex-1 flex gap-2">
+                <button onClick={() => sendCmdImmediate({ cmd: "pixel", idx: pixelId, r: config.solid_r, g: config.solid_g, b: config.solid_b })}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  className="flex-1 bg-gradient-to-r from-accentStart to-accentEnd rounded-lg text-white text-xs font-bold hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-accentStart/20">
+                  设置当前色
+                </button>
+                <button onClick={() => sendCmdImmediate({ cmd: "pixel", idx: pixelId, r: 0, g: 0, b: 0 })}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  className="w-14 bg-slate-700 hover:bg-slate-600 rounded-lg text-white text-xs font-bold active:scale-95 transition-all">
+                  关
+                </button>
+              </div>
+            </div>
           </GroupBox>
         </div>
       </div>
-      
+
       {/* 底部状态栏 */}
       <div className="text-[10px] text-gray-600 text-center font-mono h-4 shrink-0">{status}</div>
     </div>
