@@ -1,3 +1,10 @@
+/**
+ * LED Controller - Global Styles
+ * 
+ * Defines the theme system (Dark/Light) using CSS variables, 
+ * along with custom slider styling and layout utilities.
+ */
+
 @import "tailwindcss";
 
 :root {

@@ -1,9 +1,16 @@
+/**
+ * LED Controller - Main Application Component
+ * 
+ * A Tauri + React application for controlling WS2812 LED strips via ESP32 WiFi.
+ * Features: Real-time control, multiple effects, Light/Dark theme with persistence.
+ * 
+ * @author LED Controller Team
+ * @license MIT
+ */
+
 import { useState, useEffect, useRef, memo } from "react";
-// 引入 Tauri 核心 API
 import { invoke } from "@tauri-apps/api/core";
-// 引入 窗口控制 API
 import { getCurrentWindow } from '@tauri-apps/api/window';
-// 引入 图标库
 import { Power, Save, Zap, Hash, Sun, Moon, Activity, Palette, Wind, ArrowRight, ArrowLeft, X, Minus } from "lucide-react";
 
 // --- 类型定义 ---
