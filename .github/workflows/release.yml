@@ -102,7 +102,7 @@ jobs:
         run: npm install
 
       - name: Generate Icons
-        run: npm run tauri icon src-tauri/icons/icon.png
+        run: npm run tauri icon app-icon.png
 
       - name: Initialize Android Project
         run: npm run tauri android init

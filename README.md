@@ -1,6 +1,6 @@
 # LED Controller
 
-[![Build Status](https://github.com/Cans518/LED-Contrller/actions/workflows/build.yml/badge.svg)](https://github.com/Cans518/LED-Contrller/actions/workflows/build.yml)
+[![Build Status](https://github.com/Cans518/LED-Contrllerpictrue\app-icon.png)](https://github.com/Cans518/LED-Contrller/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 [English](#english) | [中文](#中文)
