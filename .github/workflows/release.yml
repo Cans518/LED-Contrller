@@ -126,7 +126,6 @@ jobs:
 
       # 🚀 上传到 Release (只有打 Tag 时)
       - name: Upload APK to Release
-        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: led-controller-android.apk
