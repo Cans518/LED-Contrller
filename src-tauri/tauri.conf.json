@@ -13,7 +13,7 @@
     "windows": [
       {
         "title": "led-contrller",
-        "width": 700,
+        "width": 830,
         "height": 700,
         "decorations": false,
         "shadow": true,
@@ -37,7 +37,9 @@
     ],
     "windows": {
       "wix": {
-        "language": ["zh-CN"]
+        "language": [
+          "zh-CN"
+        ]
       }
     }
   }

@@ -1,97 +1,166 @@
-@import "tailwindcss"; 
+@import "tailwindcss";
+
+:root {
+  /* 默认深色主题 (Cyberpunk/Neon) */
+  --bgStart: #0f0f1a;
+  --bgMid: #1a1a2e;
+  --bgEnd: #16213e;
+  /* 深色模式下的面板：深蓝半透明 */
+  --panel: rgba(35, 35, 55, 0.8);
+  --textMain: #e8e8e8;
+  --textSub: #a8a8b8;
+  --border: rgba(255, 255, 255, 0.1);
+  --input-bg: rgba(0, 0, 0, 0.2);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+
+  /* 中性按钮 (关/取消) */
+  --btn-neutral-bg: #334155;
+  --btn-neutral-hover: #475569;
+  --btn-neutral-text: #ffffff;
+
+  /* 通用颜色 */
+  --accentStart: #667eea;
+  --accentEnd: #764ba2;
+  --dangerStart: #f5576c;
+  --dangerEnd: #f093fb;
+  --successStart: #11998e;
+  --successEnd: #38ef7d;
+}
+
+[data-theme="light"] {
+  /* 浅色主题 (Premium Glassmorphism) */
+  /* 背景：梦幻般的柔和渐变 (蓝紫-白-暖灰) */
+  --bgStart: #e6e9f0;
+  --bgMid: #fdfbfb;
+  --bgEnd: #eef1f5;
+
+  /* 面板：高透磨砂玻璃 */
+  --panel: rgba(255, 255, 255, 0.75);
+
+  /* 字体：深炭色，极致清晰 */
+  --textMain: #1d1d1f;
+  --textSub: #86868b;
+
+  /* 边框：浅色模式下使用极淡的深色边框以确保在白底上的可见性 */
+  --border: rgba(0, 0, 0, 0.06);
+
+  /* 输入框背景：内嵌感 */
+  --input-bg: rgba(0, 0, 0, 0.03);
+
+  /* 阴影：柔和的彩色弥散阴影 */
+  --shadow-color: rgba(142, 142, 160, 0.12);
+
+  /* 中性按钮 (Light Mode) */
+  --btn-neutral-bg: rgba(0, 0, 0, 0.05);
+  --btn-neutral-hover: rgba(0, 0, 0, 0.1);
+  --btn-neutral-text: var(--textMain);
+
+  /* 调色：清新梦幻 (Fresh & Dreamy) */
+  --accentStart: #5fabff;
+  --accentEnd: #665eff;
+  --dangerStart: #ff758c;
+  --dangerEnd: #ff7eb3;
+  --successStart: #2af598;
+  --successEnd: #08aeea;
+}
 
 @theme {
   /* 自定义字体 */
   --font-sans: "Microsoft YaHei UI", "Segoe UI", sans-serif;
 
-  /* 自定义颜色 (复刻之前的配置) */
-  --color-bgStart: #0f0f1a;
-  --color-bgMid: #1a1a2e;
-  --color-bgEnd: #16213e;
-  --color-panel: rgba(35, 35, 55, 0.8);
-  --color-accentStart: #667eea;
-  --color-accentEnd: #764ba2;
-  --color-dangerStart: #f5576c;
-  --color-dangerEnd: #f093fb;
-  --color-successStart: #11998e;
-  --color-successEnd: #38ef7d;
-  --color-textMain: #e8e8e8;
-  --color-textSub: #a8a8b8;
+  /* 映射 CSS 变量到 Tailwind */
+  --color-bgStart: var(--bgStart);
+  --color-bgMid: var(--bgMid);
+  --color-bgEnd: var(--bgEnd);
+  --color-panel: var(--panel);
+  --color-textMain: var(--textMain);
+  --color-textSub: var(--textSub);
+  --color-border: var(--border);
+
+  --color-accentStart: var(--accentStart);
+  --color-accentEnd: var(--accentEnd);
+  --color-dangerStart: var(--dangerStart);
+  --color-dangerEnd: var(--dangerEnd);
+  --color-successStart: var(--successStart);
+  --color-successEnd: var(--successEnd);
 }
 
-html, body {
+html,
+body {
   background: transparent;
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden; /* 防止滚动条出现 */
-  
-  /* 字体和禁止选中保持不变 */
+  overflow: hidden;
   font-family: var(--font-sans);
   user-select: none;
   -webkit-user-select: none;
 }
 
-/* 2. 把圆角和背景色加给 React 的根节点 */
+/* 2. React 根节点样式 */
 #root {
-  /* 👇 这里的背景色就是你窗口的实际颜色 */
-  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
-  color: #e8e8e8;
-  
-  /* 👇 真正的窗口尺寸和圆角 */
+  /* 背景渐变 */
+  background: linear-gradient(135deg, var(--bgStart) 0%, var(--bgMid) 50%, var(--bgEnd) 100%);
+  color: var(--textMain);
   width: 100vw;
   height: 100vh;
-  /* border-radius: 12px; 这里控制圆角大小 */
-  overflow: hidden;    /* 关键：把直角的内容切掉 */
-  
-  /* 加上边框防止和黑色壁纸融为一体 */
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  /* 边框 */
+  border: 1px solid var(--border);
   box-sizing: border-box;
 }
 
-/* --- 修复滑动条的核心代码 --- */
+/* 浅色模式下的特殊背景处理 (增加噪点或光晕如果需要，这里暂用纯渐变) */
+
+/* 覆盖 Tailwind 的 shadow-lg 以适应浅色模式的柔和阴影 */
+.shadow-lg {
+  box-shadow: 0 10px 25px -5px var(--shadow-color), 0 8px 10px -6px var(--shadow-color);
+}
+
+.shadow-md {
+  box-shadow: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -1px var(--shadow-color);
+}
+
+/* --- 滑动条美化 (Premium Sliders) --- */
 input[type=range] {
   -webkit-appearance: none;
   background: transparent;
-  
-  /* 👇 关键修复 1: 显式允许在这个元素上进行交互，防止 body 的禁止选中干扰 */
   -webkit-user-select: auto;
   user-select: auto;
-  
-  /* 👇 关键修复 2: 告诉 Tauri 这个区域绝对不能用来拖动窗口 */
   -webkit-app-region: no-drag;
-  
-  cursor: grab; /* 鼠标放上去显示抓手 */
-  position: relative; 
-  z-index: 20; /* 提高层级，防止被卡片背景遮挡 */
-  touch-action: none; 
+  cursor: grab;
+  position: relative;
+  z-index: 20;
+  touch-action: none;
 }
 
-/* 按下时鼠标变紧抓手 */
 input[type=range]:active {
   cursor: grabbing;
 }
 
-/* 滑块头部 (那个圆点) */
+/* 滑块头部 */
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  height: 18px; /* 加大一点，更容易拖动 */
-  width: 18px;
+  height: 20px;
+  width: 20px;
   border-radius: 50%;
-  background: linear-gradient(to bottom, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--accentStart), var(--accentEnd));
   cursor: grab;
-  margin-top: -7px; /* 垂直居中修正 */
-  box-shadow: 0 0 10px rgba(102, 126, 234, 0.6);
-  border: 2px solid rgba(255,255,255,0.8); /* 加粗白边，视觉更明显 */
-  transition: transform 0.1s;
+  margin-top: -8px;
+  /* 垂直居中 */
+  /* 阴影：深色模式发光，浅色模式投影 */
+  box-shadow: 0 2px 6px var(--shadow-color);
+  border: 2px solid #fff;
+  /* 不管黑白模式，滑块由白边包裹显得精致 */
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s;
 }
 
-/* 按住滑块时的动效 */
+/* 按住滑块 */
 input[type=range]:active::-webkit-slider-thumb {
-  transform: scale(1.2); /* 按住时变大 */
-  cursor: grabbing;
-  background: #fff; /* 按住变白，反馈更强 */
+  transform: scale(1.1);
+  background: #fff;
+  border-color: var(--accentStart);
 }
 
 /* 滑动轨道 */
@@ -99,6 +168,7 @@ input[type=range]::-webkit-slider-runnable-track {
   width: 100%;
   height: 4px;
   cursor: pointer;
-  background: rgba(80, 80, 100, 0.5);
+  background: var(--input-bg);
+  /* 跟随主题变化的轨道底色 */
   border-radius: 2px;
 }
