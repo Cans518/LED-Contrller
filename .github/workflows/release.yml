@@ -15,8 +15,7 @@ jobs:
   desktop:
     permissions:
       contents: write
-    # 只有打 Tag 时才跑桌面端构建，节省时间（可选，如果你想每次 push 都测可以去掉 if）
-    if: startsWith(github.ref, 'refs/tags/') 
+    # 已移除 Tag 限制，现在每次 push 到 main 或手动触发都会构建桌面端 
     
     strategy:
       fail-fast: false
