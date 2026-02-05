@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "led-contrller",
-        "width": 830,
-        "height": 700,
+        "width": 850,
+        "height": 730,
         "decorations": false,
         "shadow": true,
         "backgroundColor": "#0f0f1a",

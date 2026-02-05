@@ -31,33 +31,33 @@ const Slider = memo(({ value, min, max, onChange }: { value: number, min: number
       min={min}
       max={max}
       value={value}
-      // 这里的 onChange 直接传回数值，避免父组件再转换
       onChange={(e) => onChange(Number(e.target.value))}
-      // 阻止冒泡，防止无边框窗口的拖动逻辑干扰
       onPointerDown={(e) => e.stopPropagation()}
-      className="flex-1 h-5 w-full cursor-pointer"
+      // 移动端增大触摸区域
+      className="flex-1 h-8 md:h-5 w-full cursor-pointer touch-none"
     />
   );
 });
 
-// 2. 行控件
+// 2. 行控件 (移动端增大触摸区域)
 const ControlRow = ({ label, children }: { label: string, children: React.ReactNode }) => (
-  <div className="flex items-center gap-3 text-xs min-h-[24px]">
-    <span className="w-8 text-textSub font-medium shrink-0">{label}</span>
+  <div className="flex items-center gap-3 text-sm md:text-xs min-h-[44px] md:min-h-[24px]">
+    <span className="w-10 md:w-8 text-textSub font-medium shrink-0">{label}</span>
     {children}
   </div>
 );
 
-// 3. 分组框
+// 3. 分组框 (移动端优化 padding 和圆角)
 const GroupBox = ({ title, icon: Icon, children, className = "" }: any) => (
-  <div className={`bg-panel border border-border rounded-3xl p-4 flex flex-col gap-3 shadow-lg backdrop-blur-sm ${className}`}>
+  <div className={`bg-panel border border-border rounded-2xl md:rounded-3xl p-3 md:p-4 flex flex-col gap-3 shadow-lg backdrop-blur-sm ${className}`}>
     <div className="flex items-center gap-2 mb-1 shrink-0">
-      <div className="bg-gradient-to-r from-accentStart to-accentEnd p-1.5 rounded-md text-white shadow-md">
-        <Icon size={14} />
+      <div className="bg-gradient-to-r from-accentStart to-accentEnd p-2 md:p-1.5 rounded-lg md:rounded-md text-white shadow-md">
+        <Icon size={16} className="md:hidden" />
+        <Icon size={14} className="hidden md:block" />
       </div>
-      <span className="font-bold text-sm text-textMain">{title}</span>
+      <span className="font-bold text-base md:text-sm text-textMain">{title}</span>
     </div>
-    <div className="flex flex-col gap-3 flex-1 justify-center">
+    <div className="flex flex-col gap-4 md:gap-3 flex-1 justify-center">
       {children}
     </div>
   </div>
@@ -148,7 +148,7 @@ function App() {
   };
 
   return (
-    <div className="h-screen flex flex-col p-4 gap-4 font-sans text-xs select-none overflow-hidden">
+    <div className="h-screen flex flex-col p-3 md:p-4 gap-3 md:gap-4 font-sans text-xs select-none overflow-hidden">
 
       {/* Header */}
       <div
@@ -168,8 +168,9 @@ function App() {
 
         <div className="flex gap-2 mr-2" onPointerDown={(e) => e.stopPropagation()}>
           <button onClick={toggleTheme}
-            className="p-1.5 hover:bg-white/10 rounded-md text-textSub hover:text-textMain transition-colors">
-            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            className="p-2 md:p-1.5 hover:bg-white/10 rounded-lg md:rounded-md text-textSub hover:text-textMain transition-colors min-h-[44px] md:min-h-0 min-w-[44px] md:min-w-0 flex items-center justify-center">
+            {theme === 'dark' ? <Sun size={20} className="md:hidden" /> : <Moon size={20} className="md:hidden" />}
+            {theme === 'dark' ? <Sun size={18} className="hidden md:block" /> : <Moon size={18} className="hidden md:block" />}
           </button>
         </div>
 
@@ -180,13 +181,17 @@ function App() {
             { text: "保存", cmd: "save", icon: Save, grad: "from-accentStart to-accentEnd" }
           ].map((btn, i) => (
             <button key={i} onClick={() => sendCmdImmediate({ cmd: btn.cmd })}
-              className={`px-2 py-1 md:px-3 md:py-1.5 bg-gradient-to-r ${btn.grad} rounded-lg text-white font-bold hover:brightness-110 active:scale-95 transition-all flex items-center gap-1 md:gap-2 shadow-lg`}>
-              <btn.icon size={14} /> <span className="hidden md:inline">{btn.text}</span><span className="md:hidden">{btn.text === "保存" ? "存" : btn.text.replace("全", "")}</span>
+              className={`px-3 py-2 md:px-3 md:py-1.5 bg-gradient-to-r ${btn.grad} rounded-xl md:rounded-lg text-white font-bold hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 shadow-lg min-h-[44px] md:min-h-0`}>
+              <btn.icon size={16} className="md:hidden" />
+              <btn.icon size={14} className="hidden md:block" />
+              <span className="hidden md:inline">{btn.text}</span>
+              <span className="md:hidden">{btn.text}</span>
             </button>
           ))}
         </div>
 
-        <div className="flex gap-2 pl-2 md:pl-4 border-l border-border ml-1 md:ml-2" onPointerDown={(e) => e.stopPropagation()}>
+        {/* 窗口控制按钮 - 仅桌面端显示 */}
+        <div className="hidden md:flex gap-2 pl-2 md:pl-4 border-l border-border ml-1 md:ml-2" onPointerDown={(e) => e.stopPropagation()}>
           <button onClick={() => getCurrentWindow().minimize()}
             className="p-1.5 hover:bg-white/10 rounded-md text-textSub hover:text-textMain transition-colors">
             <Minus size={16} />
@@ -199,7 +204,7 @@ function App() {
       </div>
 
       {/* 主内容 - 添加 overflow-y-auto 允许移动端滚动 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0 overflow-y-auto pb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 flex-1 min-h-0 overflow-y-auto pb-4">
 
         {/* 左列 - 移动端高度自适应，桌面端撑满 */}
         <div className="flex flex-col gap-4 h-auto md:h-full">
@@ -289,7 +294,7 @@ function App() {
 
       {/* 底部状态栏 */}
       <div className="text-[10px] text-gray-600 text-center font-mono h-4 shrink-0">{status}</div>
-    </div>
+    </div >
   );
 }
 
