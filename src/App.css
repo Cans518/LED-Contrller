@@ -116,6 +116,8 @@ body {
   /* 边框 */
   border: 1px solid var(--border);
   box-sizing: border-box;
+  /* 此处添加顶部安全区域，防止遮挡 (特别是全面屏/刘海屏) */
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* 浅色模式下的特殊背景处理 (增加噪点或光晕如果需要，这里暂用纯渐变) */
@@ -193,4 +195,70 @@ input[type=range]::-webkit-slider-runnable-track {
     height: 4px;
     border-radius: 2px;
   }
+}
+
+/* --- Animations & Utilities for WiFi Modal --- */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInBottom {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in.fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-in.zoom-in-95 {
+  animation: zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-in.slide-in-from-bottom-2 {
+  animation: slideInBottom 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }

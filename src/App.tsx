@@ -11,7 +11,7 @@
 import { useState, useEffect, useRef, memo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { Power, Save, Zap, Hash, Sun, Moon, Activity, Palette, Wind, ArrowRight, ArrowLeft, X, Minus, Link as LinkIcon, Link2Off } from "lucide-react";
+import { Power, Save, Zap, Hash, Sun, Moon, Activity, Palette, Wind, ArrowRight, ArrowLeft, X, Minus, Link as LinkIcon, Link2Off, Wifi, Trash2, Plus, ArrowUp, ArrowDown } from "lucide-react";
 
 // --- 类型定义 ---
 interface ConfigState {
@@ -19,6 +19,7 @@ interface ConfigState {
   breath_en: boolean; breath_freq: number; dir: number; flow_speed: number;
   solid_r: number; solid_g: number; solid_b: number;
   comet_len: number; comet_rainbow: boolean;
+  wifi?: { ssid: string; pass: string }[];
 }
 
 // --- 组件定义 (必须放在 App 外部！) ---
@@ -78,6 +79,272 @@ const MeteorControls = ({ config, updateConfig, className = "" }: { config: Conf
   </GroupBox>
 );
 
+// 5. WiFi 管理组件 (美化版 - 双模加强)
+const WiFiManager = ({ config, updateConfig, onClose, onSave, theme }: { config: ConfigState, updateConfig: (k: keyof ConfigState, v: any) => void, onClose: () => void, onSave: () => void, theme: string }) => {
+  const networks = config.wifi || [];
+  const isLight = theme === 'light';
+
+  // 根据主题动态设置样式
+  const styles = {
+    overlay: isLight ? "bg-black/20 backdrop-blur-sm" : "bg-black/60 backdrop-blur-md", // 浅色遮罩更淡
+    panel: isLight ? "bg-white/90 backdrop-blur-xl border-white/40 shadow-xl ring-1 ring-black/5" : "bg-panel border-white/10 ring-1 ring-white/5", // 浅色面板更通透
+    headerBg: isLight ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-gray-100" : "bg-gradient-to-r from-bgStart to-bgEnd border-border",
+    headerIconBox: isLight ? "bg-blue-500 shadow-blue-200" : "bg-gradient-to-r from-accentStart to-accentEnd shadow-accentStart/20",
+    headerTitle: isLight ? "text-gray-800" : "text-white",
+    headerSub: isLight ? "text-gray-500" : "text-textSub",
+    listEmpty: isLight ? "border-gray-200 bg-gray-50 text-gray-500" : "border-white/5 bg-white/5 text-textSub",
+    listItem: isLight ? "bg-white border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200" : "bg-white/5 hover:bg-white/[0.08] border-white/5 hover:shadow-md",
+    inputBox: isLight ? "bg-gray-50 border-gray-100 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-100" : "bg-black/20 border-transparent focus-within:border-accentStart/50",
+    inputLabel: isLight ? "border-gray-200 bg-gray-100 text-gray-600" : "border-white/5 bg-black/5 text-textSub",
+    inputText: isLight ? "text-gray-900 placeholder-gray-400" : "text-textMain placeholder-textSub/30",
+    addButton: isLight ? "border-gray-300 bg-white hover:bg-blue-50 hover:border-blue-300 text-gray-600 hover:text-blue-600" : "border-white/10 hover:border-accentStart/50 hover:bg-accentStart/5 text-textSub hover:text-white",
+    addButtonIcon: isLight ? "bg-gray-100 text-gray-500 group-hover:bg-blue-500 group-hover:text-white" : "bg-white/10 group-hover:bg-accentStart text-white",
+    footer: isLight ? "bg-gray-50/80 border-gray-100" : "bg-black/20 border-white/5",
+    btnCancel: isLight ? "text-gray-600 hover:bg-gray-200 hover:text-gray-900" : "text-textSub hover:bg-white/5 hover:text-white",
+    btnSave: isLight ? "bg-blue-600 text-white shadow-blue-200 hover:bg-blue-700 hover:shadow-blue-300" : "bg-gradient-to-r from-accentStart to-accentEnd text-white shadow-accentStart/25 hover:shadow-accentStart/40"
+  };
+
+  const updateNetwork = (index: number, field: 'ssid' | 'pass', value: string) => {
+    const newNetworks = [...networks];
+    newNetworks[index] = { ...newNetworks[index], [field]: value };
+    updateConfig('wifi', newNetworks);
+  };
+
+  const addNetwork = () => {
+    updateConfig('wifi', [...networks, { ssid: "", pass: "" }]);
+  };
+
+  const removeNetwork = (index: number) => {
+    if (confirm('确定删除此网络配置吗?')) {
+      const newNetworks = networks.filter((_, i) => i !== index);
+      updateConfig('wifi', newNetworks);
+    }
+  };
+
+  const moveNetwork = (index: number, direction: -1 | 1) => {
+    if (index + direction < 0 || index + direction >= networks.length) return;
+    const newNetworks = [...networks];
+    const temp = newNetworks[index];
+    newNetworks[index] = newNetworks[index + direction];
+    newNetworks[index + direction] = temp;
+    updateConfig('wifi', newNetworks);
+  };
+
+  return (
+    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-300 ${styles.overlay}`}>
+      <div className={`w-full max-w-md rounded-3xl shadow-2xl border flex flex-col max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-300 ${styles.panel}`}>
+        {/* Header */}
+        <div className={`relative p-6 border-b overflow-hidden ${styles.headerBg}`}>
+          {!isLight && <div className="absolute inset-0 bg-gradient-to-r from-accentStart/10 to-accentEnd/10"></div>}
+          <div className="relative flex justify-between items-center z-10">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-xl shadow-lg flex items-center justify-center text-white ${styles.headerIconBox}`}>
+                <Wifi size={24} />
+              </div>
+              <div>
+                <h2 className={`font-bold text-xl tracking-tight ${styles.headerTitle}`}>WiFi Settings</h2>
+                <p className={`text-xs ${styles.headerSub}`}>Manage device connectivity</p>
+              </div>
+            </div>
+            <button onClick={onClose} className={`p-2 rounded-full transition-all active:scale-90 ${isLight ? 'text-gray-400 hover:bg-black/5 hover:text-gray-700' : 'hover:bg-white/10 text-textSub hover:text-white'}`}>
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* List Content */}
+        <div className="flex-1 overflow-y-auto p-4 gap-4 flex flex-col custom-scrollbar">
+          {networks.length === 0 ? (
+            <div className={`flex flex-col items-center justify-center py-12 gap-3 border-2 border-dashed rounded-2xl ${styles.listEmpty}`}>
+              <Wifi size={48} className="opacity-20" />
+              <div className="text-sm font-medium">No Networks Configured</div>
+              <button onClick={addNetwork} className={`px-4 py-2 rounded-lg text-xs transition-colors border ${isLight ? 'bg-white border-gray-200' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}>
+                Add your first network
+              </button>
+            </div>
+          ) : (
+            networks.map((net, i) => (
+              <div key={i} className={`p-4 rounded-2xl border flex flex-col gap-3 transition-all group animate-in slide-in-from-bottom-2 duration-300 ${styles.listItem}`} style={{ animationDelay: `${i * 50}ms`, animationFillMode: 'backwards' }}>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 space-y-3">
+                    <div className={`flex items-center gap-2 rounded-xl pr-1 border transition-all duration-200 ${styles.inputBox}`}>
+                      <span className={`text-xs font-bold px-3 py-2.5 border-r rounded-l-xl w-16 text-center shadow-sm ${styles.inputLabel}`}>SSID</span>
+                      <input type="text" value={net.ssid} onChange={(e) => updateNetwork(i, 'ssid', e.target.value)}
+                        className={`flex-1 bg-transparent py-2 px-2 text-sm outline-none font-medium ${styles.inputText}`} placeholder="Network Name" />
+                    </div>
+                    <div className={`flex items-center gap-2 rounded-xl pr-1 border transition-all duration-200 ${styles.inputBox}`}>
+                      <span className={`text-xs font-bold px-3 py-2.5 border-r rounded-l-xl w-16 text-center shadow-sm ${styles.inputLabel}`}>PWD</span>
+                      <input type="text" value={net.pass} onChange={(e) => updateNetwork(i, 'pass', e.target.value)}
+                        className={`flex-1 bg-transparent py-2 px-2 text-sm outline-none font-mono ${styles.inputText}`} placeholder="Password" />
+                    </div>
+                  </div>
+
+                  <div className={`flex flex-col gap-1 self-stretch justify-center pl-2 border-l ${isLight ? 'border-gray-100' : 'border-white/5'}`}>
+                    <div className="flex flex-col gap-1">
+                      <button onClick={() => moveNetwork(i, -1)} disabled={i === 0}
+                        className={`p-1.5 rounded-lg transition-colors ${isLight ? 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 disabled:text-gray-200' : 'text-textSub hover:text-white disabled:opacity-30 hover:bg-white/10'}`}>
+                        <ArrowUp size={16} />
+                      </button>
+                      <button onClick={() => moveNetwork(i, 1)} disabled={i === networks.length - 1}
+                        className={`p-1.5 rounded-lg transition-colors ${isLight ? 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 disabled:text-gray-200' : 'text-textSub hover:text-white disabled:opacity-30 hover:bg-white/10'}`}>
+                        <ArrowDown size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`flex justify-end border-t pt-2 ${isLight ? 'border-gray-100' : 'border-white/5'}`}>
+                  <button onClick={() => removeNetwork(i)} className="flex items-center gap-1.5 px-3 py-1.5 text-red-400/80 hover:text-red-500 hover:bg-red-500/10 rounded-lg text-xs font-medium transition-all ml-auto">
+                    <Trash2 size={14} /> Remove
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+
+          <button onClick={addNetwork} className={`mt-2 py-4 border border-dashed rounded-2xl transition-all flex items-center justify-center gap-2 group ${styles.addButton}`}>
+            <div className={`p-1.5 rounded-full transition-colors border ${isLight ? 'border-gray-200' : 'border-white/10'} ${styles.addButtonIcon}`}>
+              <Plus size={16} />
+            </div>
+            <span className="font-medium">Add Another Network</span>
+          </button>
+        </div>
+
+        {/* Footer */}
+        <div className={`p-5 border-t backdrop-blur-sm flex gap-4 ${styles.footer}`}>
+          <button onClick={onClose} className={`flex-1 py-3 rounded-xl font-bold transition-colors border border-transparent ${styles.btnCancel}`}>
+            Cancel
+          </button>
+          <button onClick={onSave} className={`flex-[2] py-3 rounded-xl font-bold shadow-lg hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 ${styles.btnSave}`}>
+            <Save size={18} />
+            Save & Apply
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 6. 设备扫描弹窗 (雷达效果)
+interface Device {
+  ip: string;
+  mac: string;
+}
+
+const DiscoveryModal = ({ onClose, onSelect, theme }: { onClose: () => void, onSelect: (ip: string) => void, theme: string }) => {
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [scanning, setScanning] = useState(true);
+  const [confirmDevice, setConfirmDevice] = useState<Device | null>(null); // State for confirmation
+  const isLight = theme === 'light';
+
+  useEffect(() => {
+    let mounted = true;
+    const scan = async () => {
+      try {
+        const found = await invoke<Device[]>("scan_devices");
+        if (mounted) {
+          // Deduplicate by IP
+          const unique = found.filter((dev, index, self) =>
+            index === self.findIndex((t) => t.ip === dev.ip)
+          );
+          setDevices(unique);
+          setScanning(false);
+        }
+      } catch (e) {
+        console.error(e);
+        if (mounted) setScanning(false);
+      }
+    };
+    scan();
+    return () => { mounted = false; };
+  }, []);
+
+  const styles = {
+    overlay: isLight ? "bg-black/20 backdrop-blur-sm" : "bg-black/80 backdrop-blur-md",
+    panel: isLight ? "bg-white/90 border-white/40 shadow-xl ring-1 ring-black/5" : "bg-panel border-white/10 ring-1 ring-white/5",
+    textMain: isLight ? "text-gray-800" : "text-white",
+    textSub: isLight ? "text-gray-500" : "text-textSub",
+    item: isLight ? "bg-gray-50 hover:bg-blue-50 border-gray-200 text-gray-700 hover:text-blue-700" : "bg-white/5 hover:bg-white/10 border-white/5 text-textMain",
+    ripple: isLight ? "border-blue-500/30" : "border-accentStart/30"
+  };
+
+  if (confirmDevice) {
+    return (
+      <div className={`fixed inset-0 z-[60] flex items-center justify-center p-4 animate-in fade-in duration-300 ${styles.overlay}`}>
+        <div className={`w-full max-w-sm rounded-3xl shadow-2xl border flex flex-col p-6 items-center gap-4 animate-in zoom-in-95 duration-300 ${styles.panel}`}>
+          <div className={`p-4 rounded-full ${isLight ? 'bg-blue-100 text-blue-600' : 'bg-white/10 text-white'}`}>
+            <Wifi size={32} />
+          </div>
+          <div className="text-center space-y-2">
+            <h3 className={`font-bold text-lg ${styles.textMain}`}>Connect to Device?</h3>
+            <div className={`text-sm font-mono ${styles.textSub} bg-black/5 p-2 rounded-lg`}>
+              <div className="font-bold text-base">{confirmDevice.ip}</div>
+              <div className="text-xs opacity-70">{confirmDevice.mac}</div>
+            </div>
+          </div>
+          <div className="flex w-full gap-3 mt-2">
+            <button onClick={() => setConfirmDevice(null)}
+              className={`flex-1 py-3 rounded-xl font-medium transition-colors ${isLight ? 'bg-gray-100 hover:bg-gray-200 text-gray-700' : 'bg-white/5 hover:bg-white/10 text-white'}`}>
+              Cancel
+            </button>
+            <button onClick={() => onSelect(confirmDevice.ip)}
+              className={`flex-1 py-3 rounded-xl font-bold transition-all shadow-lg active:scale-95 ${isLight ? 'bg-blue-600 text-white shadow-blue-200 hover:bg-blue-700' : 'bg-gradient-to-r from-accentStart to-accentEnd text-white shadow-accentStart/25'}`}>
+              Connect
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`fixed inset-0 z-[60] flex items-center justify-center p-4 animate-in fade-in duration-300 ${styles.overlay}`}>
+      <div className={`w-full max-w-sm rounded-3xl shadow-2xl border flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 p-6 items-center gap-6 ${styles.panel}`}>
+
+        {/* Radar Animation */}
+        <div className="relative w-32 h-32 flex items-center justify-center">
+          {scanning && (
+            <>
+              <div className={`absolute inset-0 rounded-full border-2 animate-[ping_2s_linear_infinite] ${styles.ripple}`}></div>
+              <div className={`absolute inset-4 rounded-full border-2 animate-[ping_2s_linear_infinite] delay-500 ${styles.ripple}`}></div>
+            </>
+          )}
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg relative z-10 ${isLight ? 'bg-blue-100 text-blue-600' : 'bg-gradient-to-br from-accentStart to-accentEnd text-white'}`}>
+            <Wifi size={32} className={scanning ? "animate-pulse" : ""} />
+          </div>
+        </div>
+
+        <div className="text-center space-y-1">
+          <h3 className={`font-bold text-lg ${styles.textMain}`}>{scanning ? "Scanning..." : "Scan Complete"}</h3>
+          <p className={`text-xs ${styles.textSub}`}>Looking for devices on local network</p>
+        </div>
+
+        {/* Device List */}
+        <div className="w-full flex flex-col gap-2 max-h-[200px] overflow-y-auto custom-scrollbar">
+          {devices.length === 0 && !scanning ? (
+            <div className={`text-center py-4 text-xs ${styles.textSub}`}>No devices found.</div>
+          ) : (
+            devices.map((dev, i) => (
+              <button key={i} onClick={() => setConfirmDevice(dev)}
+                className={`w-full p-3 rounded-xl border flex items-center justify-between transition-all group ${styles.item}`}>
+                <div className="flex flex-col items-start gap-1">
+                  <span className="font-mono font-bold text-sm text-left">{dev.ip}</span>
+                  <span className="font-mono text-[10px] opacity-60 text-left">{dev.mac}</span>
+                </div>
+                <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+            ))
+          )}
+        </div>
+
+        <button onClick={onClose} className={`py-2 px-6 rounded-full text-sm font-medium transition-colors ${isLight ? 'bg-gray-200 hover:bg-gray-300 text-gray-700' : 'bg-white/10 hover:bg-white/20 text-white'}`}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // --- 主程序 ---
 function App() {
   // --- 状态管理 ---
@@ -85,6 +352,12 @@ function App() {
   const [status, setStatus] = useState("未连接");
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [showWifi, setShowWifi] = useState(false);
+  const [showDiscovery, setShowDiscovery] = useState(false); // New state for discovery modal
+  const longPressTimer = useRef<number | null>(null);
+  // IP Press Timer
+  const ipPressTimer = useRef<number | null>(null);
+
   // 主题状态
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "dark");
 
@@ -134,8 +407,10 @@ function App() {
   }, [ip, isConnected]);
 
   // 连接设备
-  const handleConnect = async () => {
-    if (isConnected) {
+  const handleConnect = async (targetIp?: string) => {
+    const activeIp = targetIp || ip;
+
+    if (isConnected && !targetIp) {
       setIsConnected(false);
       setStatus("已断开");
       return;
@@ -144,7 +419,7 @@ function App() {
     setIsConnecting(true);
     setStatus("连接中...");
     try {
-      const res: string = await invoke("send_and_receive_udp", { ip, data: JSON.stringify({ cmd: "get_config" }) });
+      const res: string = await invoke("send_and_receive_udp", { ip: activeIp, data: JSON.stringify({ cmd: "get_config" }) });
       console.log("Config received:", res);
       const newConfig = JSON.parse(res);
 
@@ -170,6 +445,55 @@ function App() {
     }
   }, [ip]);
 
+  // 长按/点击处理
+  const handlePressStart = () => {
+    longPressTimer.current = window.setTimeout(() => {
+      longPressTimer.current = null;
+      if (isConnected) {
+        setShowWifi(true);
+      } else {
+        setStatus("请先连接设备以配置 WiFi");
+      }
+    }, 800); // 800ms 长按触发
+  };
+
+  const handlePressEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+      handleConnect(); // 如果没有触发长按，则执行点击连接
+    }
+  };
+
+  const handleIpPressStart = () => {
+    ipPressTimer.current = window.setTimeout(() => {
+      ipPressTimer.current = null;
+      setShowDiscovery(true);
+    }, 800);
+  };
+
+  const handleIpPressEnd = () => {
+    if (ipPressTimer.current) {
+      clearTimeout(ipPressTimer.current);
+      ipPressTimer.current = null;
+    }
+  };
+
+  // 保存 WiFi 配置
+  const handleSaveWifi = async () => {
+    if (!config.wifi) return;
+    try {
+      // 1. 发送配置更新 (带 wifi 数组)
+      await sendCmdImmediate({ cmd: "config", wifi: config.wifi });
+      // 2. 发送保存命令
+      await sendCmdImmediate({ cmd: "save" });
+      setStatus("✓ WiFi 配置已保存");
+      setShowWifi(false);
+    } catch (e) {
+      setStatus(`✗ 保存失败: ${e}`);
+    }
+  };
+
   // 立即发送指令
   const sendCmdImmediate = async (payload: object) => {
     try {
@@ -194,20 +518,29 @@ function App() {
         className="bg-panel rounded-xl p-1.5 md:p-3 flex items-center gap-1.5 md:gap-4 shadow-md border border-border shrink-0 select-none"
       >
         <div
-          className="flex items-center gap-2 bg-bgStart border border-border rounded-lg px-2 py-1 md:px-3 md:py-1.5 transition-colors"
-          onPointerDown={(e) => e.stopPropagation()}
+          className="flex items-center gap-2 bg-bgStart border border-border rounded-lg px-2 py-1 md:px-3 md:py-1.5 transition-colors active:scale-95 duration-200"
+          onPointerDown={(e) => { e.stopPropagation(); handleIpPressStart(); }}
+          onPointerUp={handleIpPressEnd}
+          onPointerLeave={handleIpPressEnd}
         >
-          <span className="text-textSub font-bold">IP</span>
+          <span className="text-textSub font-bold select-none">IP</span>
           <input value={ip} onChange={(e) => setIp(e.target.value)}
             className="bg-transparent text-textMain outline-none w-28 font-mono" />
         </div>
 
         <button
-          onClick={handleConnect}
+          onPointerDown={handlePressStart}
+          onPointerUp={handlePressEnd}
+          onPointerLeave={() => {
+            if (longPressTimer.current) {
+              clearTimeout(longPressTimer.current);
+              longPressTimer.current = null;
+            }
+          }}
           disabled={isConnecting}
           className={`p-1.5 md:p-1.5 rounded-lg md:rounded-md transition-colors flex items-center gap-1 ${isConnected
-              ? 'bg-green-500/20 text-green-500 hover:bg-green-500/30'
-              : 'bg-bgStart text-textSub hover:text-textMain hover:bg-white/10'
+            ? 'bg-green-500/20 text-green-500 hover:bg-green-500/30'
+            : 'bg-bgStart text-textSub hover:text-textMain hover:bg-white/10'
             }`}
         >
           {isConnecting ? (
@@ -343,6 +676,30 @@ function App() {
           </GroupBox>
         </div>
       </div>
+
+      {/* WiFi 管理弹窗 */}
+      {showWifi && (
+        <WiFiManager
+          config={config}
+          updateConfig={updateConfig}
+          onClose={() => setShowWifi(false)}
+          onSave={handleSaveWifi}
+          theme={theme}
+        />
+      )}
+
+      {/* 设备扫描弹窗 */}
+      {showDiscovery && (
+        <DiscoveryModal
+          onClose={() => setShowDiscovery(false)}
+          onSelect={(selectedIp) => {
+            setIp(selectedIp);
+            setShowDiscovery(false);
+            handleConnect(selectedIp);
+          }}
+          theme={theme}
+        />
+      )}
 
       {/* 底部状态栏 */}
       <div className="text-[10px] text-gray-600 text-center font-mono h-4 shrink-0">{status}</div>
