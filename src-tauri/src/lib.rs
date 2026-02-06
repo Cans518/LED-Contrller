@@ -24,11 +24,34 @@ fn send_udp(ip: String, data: String) -> Result<String, String> {
     Ok("Sent".to_string())
 }
 
+#[command]
+fn send_and_receive_udp(ip: String, data: String) -> Result<String, String> {
+    let socket = UdpSocket::bind("0.0.0.0:0").map_err(|e| e.to_string())?;
+    socket
+        .set_read_timeout(Some(std::time::Duration::from_secs(2)))
+        .map_err(|e| e.to_string())?;
+
+    let target = format!("{}:{}", ip, PORT);
+    socket
+        .send_to(data.as_bytes(), &target)
+        .map_err(|e| e.to_string())?;
+
+    let mut buf = [0; 4096]; // Buffer for response
+    let (amt, _src) = socket.recv_from(&mut buf).map_err(|e| e.to_string())?;
+
+    let response = String::from_utf8_lossy(&buf[..amt]).to_string();
+    Ok(response)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, send_udp])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            send_udp,
+            send_and_receive_udp
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

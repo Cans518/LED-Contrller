@@ -1,0 +1,22 @@
+{
+    "total_leds": 60,
+    "active_len": 60,
+    "effect": 0,
+    "dir": 1,
+    "flow_speed": 30,
+    "breath_en": true,
+    "breath_freq": 15,
+    "bright": 128,
+    "solid_r": 255,
+    "solid_g": 0,
+    "solid_b": 0,
+    "comet_len": 5,
+    "comet_rainbow": false,
+    "mdns_name": "rgbcontrler",
+    "wifi": [
+        {
+            "ssid": "HC211",
+            "pass": "hllsbplus"
+        }
+    ]
+}

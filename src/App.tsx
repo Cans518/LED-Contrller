@@ -11,7 +11,7 @@
 import { useState, useEffect, useRef, memo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { Power, Save, Zap, Hash, Sun, Moon, Activity, Palette, Wind, ArrowRight, ArrowLeft, X, Minus } from "lucide-react";
+import { Power, Save, Zap, Hash, Sun, Moon, Activity, Palette, Wind, ArrowRight, ArrowLeft, X, Minus, Link as LinkIcon, Link2Off } from "lucide-react";
 
 // --- 类型定义 ---
 interface ConfigState {
@@ -82,7 +82,9 @@ const MeteorControls = ({ config, updateConfig, className = "" }: { config: Conf
 function App() {
   // --- 状态管理 ---
   const [ip, setIp] = useState("192.168.1.117");
-  const [status, setStatus] = useState("就绪");
+  const [status, setStatus] = useState("未连接");
+  const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   // 主题状态
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "dark");
 
@@ -115,7 +117,7 @@ function App() {
 
   useEffect(() => {
     const interval = setInterval(async () => {
-      if (isSending.current) return;
+      if (isSending.current || !isConnected) return;
       isSending.current = true;
       try {
         const payload = { cmd: "config", ...latestConfig.current };
@@ -129,6 +131,43 @@ function App() {
     }, 100);
 
     return () => clearInterval(interval);
+  }, [ip, isConnected]);
+
+  // 连接设备
+  const handleConnect = async () => {
+    if (isConnected) {
+      setIsConnected(false);
+      setStatus("已断开");
+      return;
+    }
+
+    setIsConnecting(true);
+    setStatus("连接中...");
+    try {
+      const res: string = await invoke("send_and_receive_udp", { ip, data: JSON.stringify({ cmd: "get_config" }) });
+      console.log("Config received:", res);
+      const newConfig = JSON.parse(res);
+
+      // 过滤掉 config 中不属于 ConfigState 的字段 (简单的做一下合并即可)
+      setConfig(prev => ({ ...prev, ...newConfig }));
+
+      setIsConnected(true);
+      setStatus("✓ 已连接");
+    } catch (e) {
+      console.error(e);
+      setStatus(`✗ 连接失败: ${e}`);
+      setIsConnected(false);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  // 当 IP 改变时，断开连接
+  useEffect(() => {
+    if (isConnected) {
+      setIsConnected(false);
+      setStatus("IP已变更，请重新连接");
+    }
   }, [ip]);
 
   // 立即发送指令
@@ -162,6 +201,23 @@ function App() {
           <input value={ip} onChange={(e) => setIp(e.target.value)}
             className="bg-transparent text-textMain outline-none w-28 font-mono" />
         </div>
+
+        <button
+          onClick={handleConnect}
+          disabled={isConnecting}
+          className={`p-1.5 md:p-1.5 rounded-lg md:rounded-md transition-colors flex items-center gap-1 ${isConnected
+              ? 'bg-green-500/20 text-green-500 hover:bg-green-500/30'
+              : 'bg-bgStart text-textSub hover:text-textMain hover:bg-white/10'
+            }`}
+        >
+          {isConnecting ? (
+            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          ) : isConnected ? (
+            <LinkIcon size={18} />
+          ) : (
+            <Link2Off size={18} />
+          )}
+        </button>
 
         <div className="flex-1 h-full" data-tauri-drag-region />
 
