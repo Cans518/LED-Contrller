@@ -92,16 +92,7 @@ fn scan_devices() -> Result<Vec<DeviceResponse>, String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .setup(|_app| {
-            #[cfg(target_os = "android")]
-            {
-                use tauri::Manager;
-                if let Some(window) = _app.get_webview_window("main") {
-                    let _ = window.set_fullscreen(true);
-                }
-            }
-            Ok(())
-        })
+        .setup(|_app| Ok(()))
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             greet,
